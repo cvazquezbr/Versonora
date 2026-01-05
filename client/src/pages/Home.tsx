@@ -40,7 +40,7 @@ export default function Home() {
     const message = encodeURIComponent(
       `Olá! Gostaria de saber mais sobre os serviços da VERSONORA. Nome: ${formData.name}, Email: ${formData.email}, Tipo: ${formData.type}, Mensagem: ${formData.message}`
     );
-    window.open(`https://wa.me/5527998989899?text=${message}`, "_blank");
+    window.open(`https://wa.me/5527998989999?text=${message}`, "_blank");
   };
 
   return (
@@ -381,13 +381,13 @@ export default function Home() {
             <div>
               <h4 className="font-bold mb-4">Contato</h4>
               <a 
-                href="https://wa.me/5527998989899" 
+                href="https://wa.me/5527998989999" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-sm text-slate-400 hover:text-white transition-colors flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                +55 27 99898-9899
+                +55 27 99898-9999
               </a>
             </div>
           </div>
@@ -399,7 +399,7 @@ export default function Home() {
 
       {/* WhatsApp Floating Button */}
       <a 
-        href="https://wa.me/5527998989899" 
+        href="https://wa.me/5527998989999" 
         target="_blank" 
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 z-40"
