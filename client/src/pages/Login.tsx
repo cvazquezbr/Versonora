@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -22,7 +20,6 @@ const Login = () => {
     if (error) {
       setError(error.message);
     } else if (data.session) {
-      login(data.session.access_token);
       setLocation('/');
     }
   };

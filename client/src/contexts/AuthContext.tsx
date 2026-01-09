@@ -6,7 +6,6 @@ import { Session, User } from '@supabase/supabase-js';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  login: (token: string) => void;
   logout: () => void;
   isAuthenticated: () => boolean;
   isAdmin: () => boolean;
@@ -32,10 +31,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const login = (token: string) => {
-    supabase.auth.setSession({ access_token: token, refresh_token: '' });
-  };
-
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -50,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, login, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, session, logout, isAuthenticated, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
