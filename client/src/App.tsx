@@ -1,37 +1,44 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Admin from "@/pages/Admin";
+import ForgotPassword from "@/pages/ForgotPassword";
+import Home from "@/pages/Home";
+import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import ResetPassword from "@/pages/ResetPassword";
+import Signup from "@/pages/Signup";
+import { Route, Router, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
 
-
-function Router() {
+function AppRoutes() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <PrivateRoute path="/admin" component={Admin} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Toaster />
-          <Router />
+          <Router>
+            <AuthProvider>
+              <Toaster />
+              <AppRoutes />
+            </AuthProvider>
+          </Router>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
