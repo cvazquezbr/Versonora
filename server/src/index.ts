@@ -22,7 +22,7 @@ async function startServer() {
   app.use('/api/admin', adminRoutes);
 
   if (process.env.NODE_ENV === 'production') {
-    const staticPath = path.resolve(__dirname, '..', '..', 'client', 'dist');
+    const staticPath = path.resolve(__dirname, '..', 'public');
     app.use(express.static(staticPath));
 
     app.get('*', (req, res) => {
