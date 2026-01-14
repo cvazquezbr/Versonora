@@ -1,67 +1,88 @@
-import { Router } from 'express';
-import { protect, admin } from '../middleware/auth';
+
+import { Router, Response, NextFunction } from 'express';
 import { supabase } from '../lib/supabase';
+import { protect, AuthRequest, isAdmin } from '../middleware/auth';
 
 const router = Router();
 
+router.use(protect);
+
 // Get all users
-router.get('/', protect, admin, async (req, res) => {
+router.get('/', isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { data: { users }, error } = await supabase.auth.admin.listUsers();
     if (error) {
-      return res.status(400).json({ error: error.message });
+      throw error;
     }
     res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Get user by ID
-router.get('/:id', protect, admin, async (req, res) => {
+// Update a user
+router.put('/:id', isAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { data: { user }, error } = await supabase.auth.admin.getUserById(req.params.id);
+    const { id } = req.params;
+    const { email, app_metadata } = req.body;
+    const { data: { user }, error } = await supabase.auth.admin.updateUserById(id, {
+      email,
+      app_metadata,
+    });
+
     if (error) {
-      return res.status(400).json({ error: error.message });
+      throw error;
     }
     res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Update user
-router.put('/:id', protect, admin, async (req, res) => {
-  const { email, app_metadata } = req.body;
-
+// Delete a user
+router.delete('/:id', isAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { data: { user }, error } = await supabase.auth.admin.updateUserById(
-      req.params.id,
-      { email, app_metadata }
-    );
-
+    const { id } = req.params;
+    const { data, error } = await supabase.auth.admin.deleteUser(id);
     if (error) {
-      return res.status(400).json({ error: error.message });
+      throw error;
     }
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
+// Get a single user
+router.get('/:id', isAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { data: { user }, error } = await supabase.auth.admin.getUserById(id);
+    if (error) {
+      throw error;
+    }
     res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Delete user
-router.delete('/:id', protect, admin, async (req, res) => {
+// Create a new user
+router.post('/', isAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { error } = await supabase.auth.admin.deleteUser(req.params.id);
+    const { email, password, app_metadata } = req.body;
+    const { data: { user }, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      app_metadata,
+    });
 
     if (error) {
-      return res.status(400).json({ error: error.message });
+      throw error;
     }
-
-    res.json({ message: 'User removed' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(201).json(user);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
