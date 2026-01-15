@@ -2,18 +2,23 @@ import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
 
-export default defineConfig({
-  appType: "spa",
-  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
-  plugins,
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    appType: "spa",
+    plugins,
+    define: {
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.NEXT_PUBLIC_SUPABASE_URL),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    },
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "src"),
       "@shared": path.resolve(import.meta.dirname, "../shared"),
       "@assets": path.resolve(import.meta.dirname, "../attached_assets"),
     },
@@ -41,4 +46,5 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+}
 });
