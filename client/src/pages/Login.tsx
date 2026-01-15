@@ -3,35 +3,33 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { supabase } from '../lib/supabase';
+import { Link } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [, setLocation] = useLocation();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else if (data.session) {
-      setLocation('/');
+    try {
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+        email,
+        password,
+      });
+      login(data.token);
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Failed to login');
     }
   };
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
   };
 
   return (

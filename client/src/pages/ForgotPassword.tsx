@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import { Link } from 'wouter';
-import { supabase } from '../lib/supabase';
+import axios from 'axios';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setMessage('');
+    setError('');
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage('Password reset email sent. Please check your inbox.');
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
+      setMessage('Password reset link sent to your email.');
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Failed to send password reset link');
     }
   };
 
@@ -27,7 +24,7 @@ const ForgotPassword = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center">Forgot Password</h2>
-        <form onSubmit={handleForgotPassword} className="space-y-6">
+        <form onSubmit={handlePasswordReset} className="space-y-6">
           <div>
             <label
               htmlFor="email"
@@ -37,7 +34,6 @@ const ForgotPassword = () => {
             </label>
             <input
               id="email"
-              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -49,7 +45,7 @@ const ForgotPassword = () => {
             type="submit"
             className="w-full px-4 py-2 text-white bg-blue-600 rounded-md"
           >
-            Reset Password
+            Send Reset Link
           </button>
         </form>
         {message && <p className="text-center text-green-500">{message}</p>}

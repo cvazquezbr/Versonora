@@ -1,36 +1,26 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { supabase } from '../lib/supabase';
+import { Link } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 const Signup = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [, setLocation] = useLocation();
+  const { login } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setMessage('');
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        },
-      },
-    });
-
-    if (error) {
-      setError(error.message);
-    } else if (data.session) {
-      setLocation('/');
-    } else {
-      setMessage('Please check your email to confirm your registration.');
+    try {
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+        email,
+        password,
+      });
+      login(data.token);
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Failed to signup');
     }
   };
 
@@ -39,22 +29,6 @@ const Signup = () => {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center">Sign Up</h2>
         <form onSubmit={handleSignup} className="space-y-6">
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md"
-              required
-            />
-          </div>
           <div>
             <label
               htmlFor="email"
@@ -95,7 +69,6 @@ const Signup = () => {
           </button>
         </form>
         {error && <p className="text-center text-red-500">{error}</p>}
-        {message && <p className="text-center text-green-500">{message}</p>}
         <div className="text-center">
           <Link to="/login" className="text-blue-600">
             Already have an account? Login
