@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { supabase } from '../lib/supabase';
@@ -31,67 +35,69 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center">Login</h2>
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+    <div className="flex items-center justify-center min-h-screen bg-slate-100">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle>Login</CardTitle>
+          <CardDescription>Acesse sua conta para continuar</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Senha</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-purple-600 hover:underline"
+                >
+                  Esqueceu a senha?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className="text-sm text-center text-red-500">{error}</p>}
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
             >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              Entrar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGoogleLogin}
+              className="w-full"
             >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full px-4 py-2 text-white bg-blue-600 rounded-md"
-          >
-            Login
-          </button>
-        </form>
-        {error && <p className="text-center text-red-500">{error}</p>}
-        <div className="flex items-center justify-center">
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full px-4 py-2 text-white bg-red-600 rounded-md"
-          >
-            Login with Google
-          </button>
-        </div>
-        <div className="text-center">
-          <Link to="/signup" className="text-blue-600">
-            Don't have an account? Sign up
-          </Link>
-        </div>
-        <div className="text-center">
-          <Link to="/forgot-password">Forgot password?</Link>
-        </div>
-      </div>
+              Entrar com Google
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center text-sm">
+          <p>
+            Não tem uma conta?{' '}
+            <Link href="/signup" className="text-purple-600 hover:underline">
+              Cadastre-se
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

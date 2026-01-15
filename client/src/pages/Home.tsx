@@ -56,6 +56,7 @@ export default function Home() {
             <a href="#como-funciona" className="hover:text-purple-600 transition-colors">Como Funciona</a>
             <a href="#tipos" className="hover:text-purple-600 transition-colors">Tipos</a>
             <a href="#formulario" className="hover:text-purple-600 transition-colors">Contato</a>
+            <a href="/login" className="hover:text-purple-600 transition-colors">Login</a>
           </nav>
         </div>
       </header>
