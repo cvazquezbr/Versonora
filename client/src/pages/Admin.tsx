@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getErrorMessage } from '../lib/utils';
 
 const Admin = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -14,7 +15,7 @@ const Admin = () => {
       const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin`);
       setUsers(data);
     } catch (error) {
-      console.error('Failed to fetch users', error);
+      console.error(getErrorMessage(error, 'Failed to fetch users'));
     }
   };
 
@@ -37,7 +38,7 @@ const Admin = () => {
         await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/${id}`);
         fetchUsers();
       } catch (error) {
-        console.error('Failed to delete user', error);
+        console.error(getErrorMessage(error, 'Failed to delete user'));
       }
     }
   };
@@ -59,7 +60,7 @@ const Admin = () => {
       setEditingUser(null);
       fetchUsers();
     } catch (error) {
-      console.error('Failed to update user', error);
+      console.error(getErrorMessage(error, 'Failed to update user'));
     }
   };
 
@@ -78,7 +79,7 @@ const Admin = () => {
       setNewUser({ email: '', password: '', isAdmin: false });
       fetchUsers();
     } catch (error) {
-      console.error('Failed to create user', error);
+      console.error(getErrorMessage(error, 'Failed to create user'));
     }
   };
 

@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { Link } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { getErrorMessage } from '../lib/utils';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -23,9 +24,8 @@ const Login = () => {
         password,
       });
       login(data.token);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to login';
-      setError(errorMessage);
+    } catch (error) {
+      setError(getErrorMessage(error, 'Failed to login'));
     }
   };
 

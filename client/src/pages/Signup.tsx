@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { getErrorMessage } from '../lib/utils';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -19,9 +20,8 @@ const Signup = () => {
         password,
       });
       login(data.token);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to signup';
-      setError(errorMessage);
+    } catch (error) {
+      setError(getErrorMessage(error, 'Failed to signup'));
     }
   };
 
