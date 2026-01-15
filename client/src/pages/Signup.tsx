@@ -20,7 +20,8 @@ const Signup = () => {
       });
       login(data.token);
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to signup');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to signup';
+      setError(errorMessage);
     }
   };
 

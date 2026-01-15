@@ -24,7 +24,8 @@ const Login = () => {
       });
       login(data.token);
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to login');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to login';
+      setError(errorMessage);
     }
   };
 

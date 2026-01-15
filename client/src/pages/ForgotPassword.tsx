@@ -16,7 +16,8 @@ const ForgotPassword = () => {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
       setMessage('Password reset link sent to your email.');
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to send password reset link');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to send password reset link';
+      setError(errorMessage);
     }
   };
 
