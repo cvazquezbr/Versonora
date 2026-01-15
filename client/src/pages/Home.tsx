@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Sparkles, Heart, Megaphone, ShoppingBag, MessageCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Heart, Megaphone, MessageCircle, Music, ShoppingBag, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { Link } from "wouter";
 
 /**
  * Design Philosophy: Minimalismo Moderno com Foco em Criatividade
@@ -56,7 +57,7 @@ export default function Home() {
             <a href="#como-funciona" className="hover:text-purple-600 transition-colors">Como Funciona</a>
             <a href="#tipos" className="hover:text-purple-600 transition-colors">Tipos</a>
             <a href="#formulario" className="hover:text-purple-600 transition-colors">Contato</a>
-            <a href="/login" className="hover:text-purple-600 transition-colors">Login</a>
+            <Link href="/login" className="hover:text-purple-600 transition-colors">Login</Link>
           </nav>
         </div>
       </header>
