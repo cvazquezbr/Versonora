@@ -1,11 +1,17 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { supabase } from '../lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+
+interface User {
+  userId: string;
+  roles: string[];
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  token: string | null;
+  login: (token: string) => void;
   logout: () => void;
   isAuthenticated: () => boolean;
   isAdmin: () => boolean;
@@ -15,37 +21,58 @@ const AuthContext = createContext<AuthContextType>(null!);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    if (tokenFromUrl) {
+      login(tokenFromUrl);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  useEffect(() => {
+    if (token) {
+      try {
+        const decodedUser = jwtDecode<User>(token);
+        setUser(decodedUser);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      } catch (error) {
+        console.error('Invalid token');
+        // Don't redirect here, just clear the token
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+        delete axios.defaults.headers.common['Authorization'];
+      }
+    }
+  }, [token]);
+
+  const login = (newToken: string) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setLocation('/');
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
     setUser(null);
-    setSession(null);
+    delete axios.defaults.headers.common['Authorization'];
     setLocation('/login');
   };
 
-  const isAuthenticated = () => !!session;
+  const isAuthenticated = () => !!token;
   const isAdmin = () => {
-    // You might need to adjust this depending on how you've set up roles in Supabase
-    return (user?.app_metadata?.roles as string[])?.includes('admin') || false;
+    return user?.roles?.includes('admin') || false;
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

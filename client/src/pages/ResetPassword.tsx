@@ -1,28 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'wouter';
-import { supabase } from '../lib/supabase';
+import { useLocation } from 'wouter';
+import axios from 'axios';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [session, setSession] = useState<any>(null);
-  const [, setLocation] = useLocation();
+  const [message, setMessage] = useState('');
+  const [token, setToken] = useState('');
+  const [location] = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, []);
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+    }
+  }, [location]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,16 +28,11 @@ const ResetPassword = () => {
       return;
     }
 
-    if (session) {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) {
-        setError(error.message);
-      } else {
-        setMessage('Password updated successfully');
-        setTimeout(() => {
-          setLocation('/login');
-        }, 3000);
-      }
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, { token, password });
+      setMessage('Password has been reset successfully.');
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Failed to reset password');
     }
   };
 
@@ -70,13 +59,13 @@ const ResetPassword = () => {
           </div>
           <div>
             <label
-              htmlFor="confirmPassword"
+              htmlFor="confirm-password"
               className="block text-sm font-medium text-gray-700"
             >
               Confirm New Password
             </label>
             <input
-              id="confirmPassword"
+              id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -91,13 +80,8 @@ const ResetPassword = () => {
             Reset Password
           </button>
         </form>
-        {message && <p className="text-center text-green-500">{message}</p>}
         {error && <p className="text-center text-red-500">{error}</p>}
-        <div className="text-center">
-          <Link to="/login" className="text-blue-600">
-            Back to Login
-          </Link>
-        </div>
+        {message && <p className="text-center text-green-500">{message}</p>}
       </div>
     </div>
   );

@@ -1,10 +1,19 @@
-
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
+import db from '../lib/db';
+
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is not set');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
+
+interface UserPayload {
+  userId: string;
+  roles: string[];
+}
 
 export interface AuthRequest extends Request {
-  user?: User;
+  user?: UserPayload;
 }
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -14,19 +23,18 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error) {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as UserPayload;
+    req.user = decoded;
+    next();
+  } catch (error) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
-  req.user = user;
-  next();
 };
 
 export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   const user = req.user;
-  if (user && user.app_metadata.roles.includes('admin')) {
+  if (user && user.roles.includes('admin')) {
     next();
   } else {
     res.status(403).json({ error: 'Forbidden' });

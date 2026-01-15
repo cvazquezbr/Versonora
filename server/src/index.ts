@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import { createServer } from 'http';
 import adminRoutes from './routes/admin';
+import authRoutes from './routes/auth';
+import passport from './lib/passport';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -18,8 +20,10 @@ async function startServer() {
 
   app.use(cors());
   app.use(bodyParser.json());
+  app.use(passport.initialize());
 
   app.use('/api/admin', adminRoutes);
+  app.use('/api/auth', authRoutes);
 
   if (process.env.NODE_ENV === 'production') {
     const staticPath = path.resolve(__dirname, '..', 'public');

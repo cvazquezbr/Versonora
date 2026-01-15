@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,13 +7,11 @@ const Admin = () => {
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ email: '', password: '', isAdmin: false });
-  const { session } = useAuth();
+  const { token } = useAuth();
 
   const fetchUsers = async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin`, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin`);
       setUsers(data);
     } catch (error) {
       console.error('Failed to fetch users', error);
@@ -22,24 +19,22 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (session) {
+    if (token) {
       fetchUsers();
     }
-  }, [session]);
+  }, [token]);
 
   const handleEdit = (user: any) => {
     setEditingUser({
       ...user,
-      isAdmin: (user.app_metadata?.roles as string[])?.includes('admin') || false,
+      isAdmin: user.roles?.includes('admin') || false,
     });
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/${id}`, {
-          headers: { Authorization: `Bearer ${session?.access_token}` },
-        });
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/${id}`);
         fetchUsers();
       } catch (error) {
         console.error('Failed to delete user', error);
@@ -53,19 +48,13 @@ const Admin = () => {
 
     const updatedUser = {
       email: editingUser.email,
-      app_metadata: {
-        ...editingUser.app_metadata,
-        roles: editingUser.isAdmin ? ['admin'] : [],
-      },
+      roles: editingUser.isAdmin ? ['admin'] : [],
     };
 
     try {
       await axios.put(
         `${import.meta.env.VITE_API_URL}/api/admin/${editingUser.id}`,
-        updatedUser,
-        {
-          headers: { Authorization: `Bearer ${session?.access_token}` },
-        }
+        updatedUser
       );
       setEditingUser(null);
       fetchUsers();
@@ -80,15 +69,11 @@ const Admin = () => {
     const userData = {
       email: newUser.email,
       password: newUser.password,
-      app_metadata: {
-        roles: newUser.isAdmin ? ['admin'] : [],
-      },
+      roles: newUser.isAdmin ? ['admin'] : [],
     };
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin`, userData, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin`, userData);
       setCreateModalOpen(false);
       setNewUser({ email: '', password: '', isAdmin: false });
       fetchUsers();
@@ -121,7 +106,7 @@ const Admin = () => {
             <tr key={user.id}>
               <td className="px-4 py-2 border">{user.email}</td>
               <td className="px-4 py-2 border">
-                {(user.app_metadata?.roles as string[])?.includes('admin') ? 'Yes' : 'No'}
+                {user.roles?.includes('admin') ? 'Yes' : 'No'}
               </td>
               <td className="px-4 py-2 border">
                 <button
