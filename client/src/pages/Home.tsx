@@ -394,6 +394,8 @@ export default function Home() {
                 <li><a href="#como-funciona" className="hover:text-white transition-colors">Como Funciona</a></li>
                 <li><a href="#tipos" className="hover:text-white transition-colors">Tipos</a></li>
                 <li><a href="#formulario" className="hover:text-white transition-colors">Contato</a></li>
+                <li><Link href="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors">Termos de Serviço</Link></li>
               </ul>
             </div>
             <div>
@@ -410,7 +412,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-slate-700 pt-8 text-center text-sm text-slate-400">
-            <p>&copy; 2026 VERSONORA. Todos os direitos reservados.</p>
+            <p>&copy; 2025 VERSONORA. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
