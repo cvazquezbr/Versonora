@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import db from './db';
-import { createUser, findUserByGoogleId } from '../services/auth';
+import db from './db.js';
+import { createUser, findUserByGoogleId } from '../services/auth.js';
 
 passport.use(
   new GoogleStrategy(

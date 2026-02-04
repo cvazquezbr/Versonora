@@ -7,7 +7,7 @@ import {
   generateToken,
   generatePasswordResetToken,
   resetPassword,
-} from '../services/auth';
+} from '../services/auth.js';
 
 const router = Router();
 

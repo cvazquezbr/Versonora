@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import db from '../lib/db';
+import db from '../lib/db.js';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is not set');
