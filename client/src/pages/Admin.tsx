@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import Header from "@/components/Header";
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage } from '../lib/utils';
 import { API_URL } from '../lib/api-config';
@@ -85,8 +86,10 @@ const Admin = () => {
   };
 
   return (
-    <div className="container p-4 mx-auto">
-      <h2 className="mb-4 text-2xl font-bold">User Management</h2>
+    <div className="min-h-screen bg-white">
+      <Header showNav={false} />
+      <div className="container pt-24 p-4 mx-auto">
+        <h2 className="mb-4 text-2xl font-bold text-slate-900">User Management</h2>
       <div className="flex justify-end mb-4">
         <button
           onClick={() => setCreateModalOpen(true)}
@@ -176,6 +179,7 @@ const Admin = () => {
         </div>
       )}
 
+      </div>
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">

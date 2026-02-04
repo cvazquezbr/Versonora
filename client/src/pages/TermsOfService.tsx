@@ -1,21 +1,9 @@
-import { Music } from "lucide-react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
 
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-slate-100">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 cursor-pointer">
-            <Music className="w-6 h-6 text-purple-600" />
-            <span className="text-xl font-bold text-slate-900">VERSONORA</span>
-          </Link>
-          <Link href="/">
-            <Button variant="ghost">Voltar para Home</Button>
-          </Link>
-        </div>
-      </header>
+      <Header showNav={false} />
 
       <main className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-3xl prose prose-slate">
