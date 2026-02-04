@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { createUser } from './services/auth';
+import { createUser } from './services/auth.js';
 
 dotenv.config();
 

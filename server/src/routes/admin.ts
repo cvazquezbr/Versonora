@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
-import db from '../lib/db';
-import { protect, AuthRequest, isAdmin } from '../middleware/auth';
-import { createUser } from '../services/auth';
+import db from '../lib/db.js';
+import { protect, AuthRequest, isAdmin } from '../middleware/auth.js';
+import { createUser } from '../services/auth.js';
 
 const router = Router();
 

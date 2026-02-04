@@ -1,8 +1,8 @@
 import cors from 'cors';
 import express from 'express';
-import adminRoutes from './routes/admin';
-import authRoutes from './routes/auth';
-import passport from './lib/passport';
+import adminRoutes from './routes/admin.js';
+import authRoutes from './routes/auth.js';
+import passport from './lib/passport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createUser, findUserByEmail, comparePassword } from './auth';
-import db from '../lib/db';
+import { createUser, findUserByEmail, comparePassword } from './auth.js';
+import db from '../lib/db.js';
 
 describe('Auth Service', () => {
   beforeAll(async () => {
