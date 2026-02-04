@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage } from '../lib/utils';
+import { API_URL } from '../lib/api-config';
 
 const Admin = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -12,7 +13,7 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin`);
+      const { data } = await axios.get(`${API_URL}/api/admin`);
       setUsers(data);
     } catch (error) {
       console.error(getErrorMessage(error, 'Failed to fetch users'));
@@ -35,7 +36,7 @@ const Admin = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/${id}`);
+        await axios.delete(`${API_URL}/api/admin/${id}`);
         fetchUsers();
       } catch (error) {
         console.error(getErrorMessage(error, 'Failed to delete user'));
@@ -54,7 +55,7 @@ const Admin = () => {
 
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/admin/${editingUser.id}`,
+        `${API_URL}/api/admin/${editingUser.id}`,
         updatedUser
       );
       setEditingUser(null);
@@ -74,7 +75,7 @@ const Admin = () => {
     };
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin`, userData);
+      await axios.post(`${API_URL}/api/admin`, userData);
       setCreateModalOpen(false);
       setNewUser({ email: '', password: '', isAdmin: false });
       fetchUsers();

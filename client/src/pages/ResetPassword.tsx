@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import axios from 'axios';
 import { getErrorMessage } from '../lib/utils';
+import { API_URL } from '../lib/api-config';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -30,7 +31,7 @@ const ResetPassword = () => {
     }
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, { token, password });
+      await axios.post(`${API_URL}/api/auth/reset-password`, { token, password });
       setMessage('Password has been reset successfully.');
     } catch (error) {
       setError(getErrorMessage(error, 'Failed to reset password'));
