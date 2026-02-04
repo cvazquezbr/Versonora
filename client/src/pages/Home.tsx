@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Megaphone, Menu, MessageCircle, Music, ShoppingBag, Sparkles, X } from "lucide-react";
+import { Heart, Megaphone, MessageCircle, Music, ShoppingBag, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
+import Header from "@/components/Header";
 
 /**
  * Design Philosophy: Minimalismo Moderno com Foco em Criatividade
@@ -18,7 +19,6 @@ import { Link } from "wouter";
  */
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -47,36 +47,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      {/* Header/Navigation */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-slate-100">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Music className="w-6 h-6 text-purple-600" />
-            <span className="text-xl font-bold text-slate-900">VERSONORA</span>
-          </div>
-          <nav className="hidden md:flex gap-8 text-sm font-medium">
-            <a href="#como-funciona" className="hover:text-purple-600 transition-colors">Como Funciona</a>
-            <a href="#tipos" className="hover:text-purple-600 transition-colors">Tipos</a>
-            <a href="#formulario" className="hover:text-purple-600 transition-colors">Contato</a>
-            <Link href="/login" className="hover:text-purple-600 transition-colors">Login</Link>
-          </nav>
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
-        </div>
-        {isMenuOpen && (
-          <div className="md:hidden bg-white/95 pb-4">
-            <nav className="container mx-auto px-4 flex flex-col gap-4 text-sm font-medium">
-              <a href="#como-funciona" className="hover:text-purple-600 transition-colors" onClick={() => setIsMenuOpen(false)}>Como Funciona</a>
-              <a href="#tipos" className="hover:text-purple-600 transition-colors" onClick={() => setIsMenuOpen(false)}>Tipos</a>
-              <a href="#formulario" className="hover:text-purple-600 transition-colors" onClick={() => setIsMenuOpen(false)}>Contato</a>
-              <Link href="/login" className="hover:text-purple-600 transition-colors" onClick={() => setIsMenuOpen(false)}>Login</Link>
-            </nav>
-          </div>
-        )}
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 relative overflow-hidden">
