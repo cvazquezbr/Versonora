@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { getErrorMessage } from '../lib/utils';
+import { API_URL } from '../lib/api-config';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ const Signup = () => {
     setError('');
 
     try {
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      const { data } = await axios.post(`${API_URL}/api/auth/register`, {
         email,
         password,
       });

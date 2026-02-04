@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'wouter';
 import axios from 'axios';
 import { getErrorMessage } from '../lib/utils';
+import { API_URL } from '../lib/api-config';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ const ForgotPassword = () => {
     setError('');
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
+      await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
       setMessage('Password reset link sent to your email.');
     } catch (error) {
       setError(getErrorMessage(error, 'Failed to send password reset link'));
