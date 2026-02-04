@@ -25,7 +25,9 @@ const Login = () => {
       });
       login(data.token);
     } catch (error) {
-      setError(getErrorMessage(error, 'Failed to login'));
+      const errorMessage = getErrorMessage(error, 'Failed to login');
+      // Ensure error is always a string
+      setError(typeof errorMessage === 'string' ? errorMessage : 'An error occurred');
     }
   };
 
@@ -71,7 +73,7 @@ const Login = () => {
                 required
               />
             </div>
-            {error && <p className="text-sm text-center text-red-500">{error}</p>}
+            {error && typeof error === 'string' && <p className="text-sm text-center text-red-500">{error}</p>}
             <Button
               type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700"
