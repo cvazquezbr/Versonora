@@ -27,7 +27,7 @@ function AppRoutes() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
-      <PrivateRoute path="/admin" component={Admin} />
+      <PrivateRoute path="/admin" component={Admin} requireAdmin={true} />
       <PrivateRoute path="/chat" component={Chat} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

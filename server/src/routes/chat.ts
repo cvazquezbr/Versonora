@@ -1,4 +1,4 @@
-import { Router, Response, RequestHandler } from 'express';
+import { Router, Response, Request, RequestHandler } from 'express';
 import db from '../lib/db.js';
 import { protect, AuthRequest } from '../middleware/auth.js';
 
@@ -8,7 +8,7 @@ router.use(protect as RequestHandler);
 
 // Get conversations for the current user
 // If admin, get all conversations
-router.get('/conversations', (async (req, res) => {
+router.get('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user!.userId;
@@ -38,33 +38,31 @@ router.get('/conversations', (async (req, res) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-}) as RequestHandler);
+}) as any);
 
-// Start a new conversation or get existing one
-router.post('/conversations', (async (req, res) => {
+// Start a new conversation
+router.post('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user!.userId;
+    const { title = 'Nova Conversa' } = req.body;
 
-    // Check if conversation already exists for this user
-    const existing = await db.query('SELECT * FROM conversations WHERE user_id = $1', [userId]);
-
-    if (existing.rows.length > 0) {
-      return res.json(existing.rows[0]);
-    }
+    // We now allow multiple conversations, but if a title is provided we just create it.
+    // If we wanted to keep only one, we'd check here.
+    // Given the requirement of "topics", multiple seems better.
 
     const { rows } = await db.query(
-      'INSERT INTO conversations (user_id) VALUES ($1) RETURNING *',
-      [userId]
+      'INSERT INTO conversations (user_id, title) VALUES ($1, $2) RETURNING *',
+      [userId, title]
     );
     res.status(201).json(rows[0]);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-}) as RequestHandler);
+}) as any);
 
 // Get messages for a conversation
-router.get('/conversations/:id/messages', (async (req, res) => {
+router.get('/conversations/:id/messages', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const { id } = req.params;
@@ -99,10 +97,10 @@ router.get('/conversations/:id/messages', (async (req, res) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-}) as RequestHandler);
+}) as any);
 
 // Send a message
-router.post('/conversations/:id/messages', (async (req, res) => {
+router.post('/conversations/:id/messages', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const { id } = req.params;
@@ -131,10 +129,10 @@ router.post('/conversations/:id/messages', (async (req, res) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-}) as RequestHandler);
+}) as any);
 
 // Get total unread count
-router.get('/unread-count', (async (req, res) => {
+router.get('/unread-count', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user!.userId;
@@ -154,6 +152,6 @@ router.get('/unread-count', (async (req, res) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-}) as RequestHandler);
+}) as any);
 
 export default router;

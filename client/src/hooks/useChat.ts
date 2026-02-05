@@ -94,9 +94,9 @@ export function useChat() {
     }
   };
 
-  const startConversation = async () => {
+  const startConversation = async (title?: string) => {
     try {
-      const { data } = await axios.post(`${API_URL}/api/chat/conversations`);
+      const { data } = await axios.post(`${API_URL}/api/chat/conversations`, { title });
       setActiveConversation(data);
       fetchConversations();
       return data;

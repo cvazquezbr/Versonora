@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 interface Conversation {
   id: string;
   user_email: string;
+  title: string;
   last_message: string;
   last_message_at: string;
   unread_count: number;
@@ -47,7 +48,7 @@ export default function ChatSidebar({
             >
               <div className="flex justify-between items-start w-full">
                 <span className="font-semibold text-slate-900 truncate flex-1">
-                  {isAdmin ? conv.user_email : "Suporte Versonora"}
+                  {isAdmin ? conv.user_email : conv.title}
                 </span>
                 {conv.last_message_at && (
                   <span className="text-[10px] text-slate-400 ml-2 whitespace-nowrap">

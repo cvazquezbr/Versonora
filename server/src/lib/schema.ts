@@ -5,6 +5,7 @@ export const initSchema = async () => {
     CREATE TABLE IF NOT EXISTS conversations (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL DEFAULT 'Nova Conversa',
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
@@ -20,6 +21,14 @@ export const initSchema = async () => {
 
     CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+
+    -- Ensure title column exists
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='conversations' AND column_name='title') THEN
+        ALTER TABLE conversations ADD COLUMN title TEXT NOT NULL DEFAULT 'Nova Conversa';
+      END IF;
+    END $$;
 
     -- Enable Realtime for messages
     DO $$
