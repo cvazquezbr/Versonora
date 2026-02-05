@@ -7,10 +7,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Menu, Music, User, X, LayoutDashboard } from "lucide-react";
+import { LogOut, Menu, Music, User, X, LayoutDashboard, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../contexts/AuthContext";
+import { useChatContext } from "../contexts/ChatContext";
 
 interface HeaderProps {
   showNav?: boolean;
@@ -19,6 +20,7 @@ interface HeaderProps {
 export default function Header({ showNav = true }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const { unreadTotal } = useChatContext();
   const [location] = useLocation();
 
   const handleLogout = () => {
@@ -51,7 +53,16 @@ export default function Header({ showNav = true }: HeaderProps) {
 
           <div className="hidden md:flex items-center gap-4 border-l border-slate-200 pl-4">
             {isAuthenticated() ? (
-              <DropdownMenu>
+              <>
+                <Link href="/chat" className="relative p-2 text-slate-600 hover:text-purple-600 transition-colors">
+                  <MessageSquare className="h-5 w-5" />
+                  {unreadTotal > 0 && (
+                    <span className="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-bold px-1 rounded-full min-w-[1.2rem] text-center border-2 border-white">
+                      {unreadTotal}
+                    </span>
+                  )}
+                </Link>
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <User className="h-5 w-5 text-slate-600" />
@@ -74,6 +85,7 @@ export default function Header({ showNav = true }: HeaderProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <Link href="/login" className="text-sm font-medium hover:text-purple-600 transition-colors">
                 Login
@@ -83,7 +95,16 @@ export default function Header({ showNav = true }: HeaderProps) {
 
           <div className="md:hidden flex items-center gap-2">
             {isAuthenticated() && (
-               <DropdownMenu>
+              <>
+                <Link href="/chat" className="relative p-2 text-slate-600 hover:text-purple-600 transition-colors">
+                  <MessageSquare className="h-5 w-5" />
+                  {unreadTotal > 0 && (
+                    <span className="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-bold px-1 rounded-full min-w-[1.2rem] text-center border-2 border-white">
+                      {unreadTotal}
+                    </span>
+                  )}
+                </Link>
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <User className="h-5 w-5 text-slate-600" />
@@ -102,6 +123,7 @@ export default function Header({ showNav = true }: HeaderProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             )}
             <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

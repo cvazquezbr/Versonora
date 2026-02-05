@@ -1,25 +1,25 @@
-import { Router, Response } from 'express';
+import { Router, RequestHandler } from 'express';
 import db from '../lib/db.js';
-import { protect, AuthRequest, isAdmin } from '../middleware/auth.js';
+import { protect, isAdmin } from '../middleware/auth.js';
 import { createUser } from '../services/auth.js';
 
 const router = Router();
 
-router.use(protect);
-router.use(isAdmin);
+router.use(protect as RequestHandler);
+router.use(isAdmin as RequestHandler);
 
 // Get all users
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get('/', (async (req, res) => {
   try {
     const { rows } = await db.query('SELECT id, email, roles, created_at, updated_at FROM users');
     res.json(rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-});
+}) as RequestHandler);
 
 // Update a user
-router.put('/:id', async (req: AuthRequest, res: Response) => {
+router.put('/:id', (async (req, res) => {
   try {
     const { id } = req.params;
     const { email, roles } = req.body;
@@ -31,10 +31,10 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-});
+}) as RequestHandler);
 
 // Delete a user
-router.delete('/:id', async (req: AuthRequest, res: Response) => {
+router.delete('/:id', (async (req, res) => {
   try {
     const { id } = req.params;
     await db.query('DELETE FROM users WHERE id = $1', [id]);
@@ -42,10 +42,10 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-});
+}) as RequestHandler);
 
 // Get a single user
-router.get('/:id', async (req: AuthRequest, res: Response) => {
+router.get('/:id', (async (req, res) => {
   try {
     const { id } = req.params;
     const { rows } = await db.query('SELECT id, email, roles, created_at, updated_at FROM users WHERE id = $1', [id]);
@@ -53,10 +53,10 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-});
+}) as RequestHandler);
 
 // Create a new user
-router.post('/', async (req: AuthRequest, res: Response) => {
+router.post('/', (async (req, res) => {
   try {
     const { email, password, roles } = req.body;
     const user = await createUser(email, password, undefined, roles);
@@ -64,6 +64,6 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
-});
+}) as RequestHandler);
 
 export default router;
