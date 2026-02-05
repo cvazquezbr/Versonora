@@ -4,10 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Megaphone, MessageCircle, Music, ShoppingBag, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Heart, Megaphone, MessageCircle, Music, ShoppingBag, Sparkles, Play } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import axios from "axios";
+import { API_URL } from "@/lib/api-config";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 /**
  * Design Philosophy: Minimalismo Moderno com Foco em Criatividade
@@ -18,7 +27,16 @@ import Header from "@/components/Header";
  * - Micro-interações sutis
  */
 
+interface ProductionCase {
+  id: string;
+  name: string;
+  description: string;
+  cover_url: string;
+  youtube_url: string;
+}
+
 export default function Home() {
+  const [cases, setCases] = useState<ProductionCase[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -44,6 +62,18 @@ export default function Home() {
     );
     window.open(`https://wa.me/5527998989999?text=${message}`, "_blank");
   };
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/api/production-cases`);
+        setCases(data);
+      } catch (error) {
+        console.error("Erro ao buscar casos de produção:", error);
+      }
+    };
+    fetchCases();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -96,6 +126,86 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Divider Line */}
+      <div className="px-4">
+        <div className="container mx-auto border-t border-slate-200"></div>
+      </div>
+
+      {/* Casos Section */}
+      {cases.length > 0 && (
+        <section className="py-20 px-4 bg-slate-50/50">
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex justify-between items-end mb-12">
+              <div>
+                <h2 className="text-4xl font-bold mb-4">Casos de Sucesso</h2>
+                <p className="text-lg text-slate-600">
+                  Conheça algumas das nossas produções recentes
+                </p>
+              </div>
+            </div>
+
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {cases.map((pc) => (
+                  <CarouselItem key={pc.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 h-full flex flex-col">
+                      <div className="relative aspect-video overflow-hidden">
+                        <img
+                          src={pc.cover_url || "/images/case-placeholder.png"}
+                          alt={pc.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300">
+                          {pc.youtube_url && (
+                            <a
+                              href={pc.youtube_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white transform scale-90 group-hover:scale-100 transition-transform duration-300 shadow-lg"
+                            >
+                              <Play size={32} fill="currentColor" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h3 className="text-xl font-bold mb-2 group-hover:text-purple-600 transition-colors">
+                          {pc.name}
+                        </h3>
+                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">
+                          {pc.description}
+                        </p>
+                        {pc.youtube_url && (
+                          <a
+                            href={pc.youtube_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-sm font-semibold text-purple-600 hover:text-purple-700 gap-1"
+                          >
+                            Ver produção completa
+                            <Sparkles size={14} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="flex justify-end gap-2 mt-8">
+                <CarouselPrevious className="static translate-y-0" />
+                <CarouselNext className="static translate-y-0" />
+              </div>
+            </Carousel>
+          </div>
+        </section>
+      )}
 
       {/* Divider Line */}
       <div className="px-4">
