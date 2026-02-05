@@ -4,6 +4,7 @@ import { initSchema } from './lib/schema.js';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
+import productionCasesRoutes from './routes/production-cases.js';
 import passport from './lib/passport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -25,6 +26,7 @@ app.use(passport.initialize());
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/production-cases', productionCasesRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   const staticPath = path.resolve(__dirname, '..', 'public');

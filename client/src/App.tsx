@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Admin from "@/pages/Admin";
+import AdminProductionCases from "@/pages/AdminProductionCases";
 import Chat from "@/pages/Chat";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
@@ -28,6 +29,7 @@ function AppRoutes() {
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <PrivateRoute path="/admin" component={Admin} requireAdmin={true} />
+      <PrivateRoute path="/admin/production-cases" component={AdminProductionCases} requireAdmin={true} />
       <PrivateRoute path="/chat" component={Chat} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
