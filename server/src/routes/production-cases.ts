@@ -4,9 +4,16 @@ import { protect, AuthRequest, isAdmin } from '../middleware/auth.js';
 import { supabase } from '../lib/supabase.js';
 import multer from 'multer';
 import { nanoid } from 'nanoid';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 // Get all production cases (Publicly accessible)
 router.get('/', (async (req: Request, res: Response) => {
@@ -25,43 +32,51 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
     const { name, description, youtube_url } = req.body;
     let cover_url = null;
 
-    if (req.file && supabase) {
+    if (req.file) {
       const file = req.file;
       const fileExt = file.originalname.split('.').pop();
       const fileName = `${nanoid()}.${fileExt}`;
-      const filePath = `covers/${fileName}`;
 
-      const { data, error } = await supabase.storage
-        .from('production-cases')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: true
-        });
+      if (supabase) {
+        const filePath = `covers/${fileName}`;
+        const { data, error } = await supabase.storage
+          .from('production-cases')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: true
+          });
 
-      if (error) {
-        // Try to create bucket if it doesn't exist
-        if (error.message.includes('bucket not found') || error.message.includes('Bucket not found')) {
-            try {
-                await supabase.storage.createBucket('production-cases', { public: true });
-                const { data: retryData, error: retryError } = await supabase.storage
-                    .from('production-cases')
-                    .upload(filePath, file.buffer, {
-                        contentType: file.mimetype,
-                        upsert: true
-                    });
-                if (retryError) throw retryError;
-                const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
-                cover_url = publicUrl;
-            } catch (bucketError) {
-                console.error('[ProductionCases] Error creating bucket or retrying upload:', bucketError);
-                throw error; // Throw original error if bucket creation fails
-            }
+        if (error) {
+          // Try to create bucket if it doesn't exist
+          if (error.message.includes('bucket not found') || error.message.includes('Bucket not found')) {
+              try {
+                  await supabase.storage.createBucket('production-cases', { public: true });
+                  const { data: retryData, error: retryError } = await supabase.storage
+                      .from('production-cases')
+                      .upload(filePath, file.buffer, {
+                          contentType: file.mimetype,
+                          upsert: true
+                      });
+                  if (retryError) throw retryError;
+                  const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
+                  cover_url = publicUrl;
+              } catch (bucketError) {
+                  console.error('[ProductionCases] Error creating bucket or retrying upload:', bucketError);
+                  throw error; // Throw original error if bucket creation fails
+              }
+          } else {
+              throw error;
+          }
         } else {
-            throw error;
+          const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
+          cover_url = publicUrl;
         }
       } else {
-        const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
-        cover_url = publicUrl;
+        // Fallback to local storage
+        const filePath = path.join(UPLOADS_DIR, fileName);
+        fs.writeFileSync(filePath, file.buffer);
+        cover_url = `/uploads/${fileName}`;
+        console.log(`[ProductionCases] File saved locally: ${cover_url}`);
       }
     }
 
@@ -83,23 +98,31 @@ router.put('/:id', protect as any, isAdmin as any, upload.single('cover'), (asyn
     const { name, description, youtube_url } = req.body;
     let cover_url = req.body.cover_url;
 
-    if (req.file && supabase) {
+    if (req.file) {
       const file = req.file;
       const fileExt = file.originalname.split('.').pop();
       const fileName = `${nanoid()}.${fileExt}`;
-      const filePath = `covers/${fileName}`;
 
-      const { data, error } = await supabase.storage
-        .from('production-cases')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: true
-        });
+      if (supabase) {
+        const filePath = `covers/${fileName}`;
+        const { data, error } = await supabase.storage
+          .from('production-cases')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: true
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
-      cover_url = publicUrl;
+        const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
+        cover_url = publicUrl;
+      } else {
+        // Fallback to local storage
+        const filePath = path.join(UPLOADS_DIR, fileName);
+        fs.writeFileSync(filePath, file.buffer);
+        cover_url = `/uploads/${fileName}`;
+        console.log(`[ProductionCases] File updated locally: ${cover_url}`);
+      }
     }
 
     const { rows } = await db.query(

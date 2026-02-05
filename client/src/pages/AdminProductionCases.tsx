@@ -18,6 +18,12 @@ interface ProductionCase {
 }
 
 const AdminProductionCases = () => {
+  const getImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `${API_URL}${url}`;
+  };
+
   const [cases, setCases] = useState<ProductionCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingCase, setEditingCase] = useState<Partial<ProductionCase> | null>(null);
@@ -138,7 +144,7 @@ const AdminProductionCases = () => {
             {cases.map((pc) => (
               <div key={pc.id} className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
                 {pc.cover_url && (
-                  <img src={pc.cover_url} alt={pc.name} className="w-full h-48 object-cover" />
+                  <img src={getImageUrl(pc.cover_url)} alt={pc.name} className="w-full h-48 object-cover" />
                 )}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2">{pc.name}</h3>

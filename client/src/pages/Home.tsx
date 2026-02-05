@@ -36,6 +36,12 @@ interface ProductionCase {
 }
 
 export default function Home() {
+  const getImageUrl = (url: string) => {
+    if (!url) return "/images/case-placeholder.png";
+    if (url.startsWith("http")) return url;
+    return `${API_URL}${url}`;
+  };
+
   const [cases, setCases] = useState<ProductionCase[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -158,7 +164,7 @@ export default function Home() {
                     <div className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 h-full flex flex-col">
                       <div className="relative aspect-video overflow-hidden">
                         <img
-                          src={pc.cover_url || "/images/case-placeholder.png"}
+                          src={getImageUrl(pc.cover_url)}
                           alt={pc.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
