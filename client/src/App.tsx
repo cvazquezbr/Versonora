@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Admin from "@/pages/Admin";
+import Chat from "@/pages/Chat";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
@@ -13,6 +14,7 @@ import { Route, Router, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ChatProvider } from "./contexts/ChatContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function AppRoutes() {
@@ -26,6 +28,7 @@ function AppRoutes() {
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <PrivateRoute path="/admin" component={Admin} />
+      <PrivateRoute path="/chat" component={Chat} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -39,8 +42,10 @@ function App() {
         <TooltipProvider>
           <Router>
             <AuthProvider>
-              <Toaster />
-              <AppRoutes />
+              <ChatProvider>
+                <Toaster />
+                <AppRoutes />
+              </ChatProvider>
             </AuthProvider>
           </Router>
         </TooltipProvider>
