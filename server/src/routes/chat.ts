@@ -8,7 +8,7 @@ router.use(protect as RequestHandler);
 
 // Handle database errors specifically for missing tables
 const handleDbError = (res: Response, error: any, context: string) => {
-  console.error(`Error ${context}:`, error);
+  console.error(`[Chat] Database error during ${context}:`, error);
   if (error.code === '42P01') {
     return res.status(500).json({ error: 'Database schema not fully initialized. Please try again in a few seconds.' });
   }
@@ -20,10 +20,13 @@ const handleDbError = (res: Response, error: any, context: string) => {
 router.get('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
-    const userId = authReq.user?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = authReq.userPayload?.userId;
+    if (!userId) {
+        console.error('[Chat] userId missing in request after protect middleware');
+        return res.status(401).json({ error: 'Unauthorized: User identity lost' });
+    }
 
-    const isUserAdmin = authReq.user!.roles.includes('admin');
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
 
     let query = `
       SELECT c.*,
@@ -55,15 +58,16 @@ router.get('/conversations', (async (req: Request, res: Response) => {
 router.post('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
-    const userId = authReq.user?.userId;
+    const userId = authReq.userPayload?.userId;
 
     if (!userId) {
-      return res.status(401).json({ error: 'User ID missing from request' });
+      console.error('[Chat] userId missing in request during POST /conversations');
+      return res.status(401).json({ error: 'Unauthorized: User identity lost' });
     }
 
     const { title = 'Nova Conversa' } = req.body || {};
 
-    console.log(`Creating new conversation for user ${userId} with title: ${title}`);
+    console.log(`[Chat] Creating new conversation for user ${userId} with title: ${title}`);
 
     const { rows } = await db.query(
       'INSERT INTO conversations (user_id, title, updated_at) VALUES ($1, $2, NOW()) RETURNING *',
@@ -80,10 +84,13 @@ router.get('/conversations/:id/messages', (async (req: Request, res: Response) =
   try {
     const authReq = req as AuthRequest;
     const { id } = req.params;
-    const userId = authReq.user?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = authReq.userPayload?.userId;
+    if (!userId) {
+        console.error('[Chat] userId missing in request during GET messages');
+        return res.status(401).json({ error: 'Unauthorized: User identity lost' });
+    }
 
-    const isUserAdmin = authReq.user!.roles.includes('admin');
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
 
     // Verify access
     const conv = await db.query('SELECT * FROM conversations WHERE id = $1', [id]);
@@ -92,6 +99,7 @@ router.get('/conversations/:id/messages', (async (req: Request, res: Response) =
     }
 
     if (!isUserAdmin && conv.rows[0].user_id !== userId) {
+      console.warn(`[Chat] Access denied for user ${userId} to conversation ${id}`);
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -121,10 +129,13 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
     const authReq = req as AuthRequest;
     const { id } = req.params;
     const { content } = req.body;
-    const userId = authReq.user?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = authReq.userPayload?.userId;
+    if (!userId) {
+        console.error('[Chat] userId missing in request during POST message');
+        return res.status(401).json({ error: 'Unauthorized: User identity lost' });
+    }
 
-    const isUserAdmin = authReq.user!.roles.includes('admin');
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
 
     // Verify access
     const conv = await db.query('SELECT * FROM conversations WHERE id = $1', [id]);
@@ -133,6 +144,7 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
     }
 
     if (!isUserAdmin && conv.rows[0].user_id !== userId) {
+      console.warn(`[Chat] Access denied for user ${userId} to conversation ${id}`);
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -153,10 +165,13 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
 router.get('/unread-count', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
-    const userId = authReq.user?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = authReq.userPayload?.userId;
+    if (!userId) {
+        console.error('[Chat] userId missing in request during unread-count');
+        return res.status(401).json({ error: 'Unauthorized: User identity lost' });
+    }
 
-    const isUserAdmin = authReq.user!.roles.includes('admin');
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
 
     let query = '';
     const params: any[] = [userId];
