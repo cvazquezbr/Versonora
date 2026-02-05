@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 export function useChat() {
   const [conversations, setConversations] = useState<any[]>([]);
   const [activeConversation, setActiveConversation] = useState<any>(null);
+  const [currentFilter, setCurrentFilter] = useState<string | undefined>(undefined);
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -17,14 +18,18 @@ export function useChat() {
   const offsetRef = useRef(0);
   const LIMIT = 20;
 
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (filter?: string) => {
     try {
-      const { data } = await axios.get(`${API_URL}/api/chat/conversations`);
+      const actualFilter = filter !== undefined ? filter : currentFilter;
+      const { data } = await axios.get(`${API_URL}/api/chat/conversations`, {
+        params: { filter: actualFilter }
+      });
       setConversations(data);
+      if (filter !== undefined) setCurrentFilter(filter);
     } catch (error) {
       console.error('Failed to fetch conversations', error);
     }
-  }, []);
+  }, [currentFilter]);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -94,14 +99,57 @@ export function useChat() {
     }
   };
 
-  const startConversation = async (title?: string) => {
+  const startConversation = async (title?: string, targetUserId?: string) => {
     try {
-      const { data } = await axios.post(`${API_URL}/api/chat/conversations`, { title });
+      const { data } = await axios.post(`${API_URL}/api/chat/conversations`, {
+        title,
+        target_user_id: targetUserId
+      });
       setActiveConversation(data);
       fetchConversations();
       return data;
     } catch (error) {
       console.error('Failed to start conversation', error);
+    }
+  };
+
+  const renameConversation = async (id: string, title: string) => {
+    try {
+      const { data } = await axios.put(`${API_URL}/api/chat/conversations/${id}`, { title });
+      setConversations(prev => prev.map(c => c.id === id ? { ...c, title: data.title } : c));
+      if (activeConversation?.id === id) {
+        setActiveConversation(prev => ({ ...prev, title: data.title }));
+      }
+      toast.success('Conversa renomeada');
+    } catch (error) {
+      toast.error('Erro ao renomear conversa');
+      console.error('Failed to rename conversation', error);
+    }
+  };
+
+  const deleteConversation = async (id: string) => {
+    try {
+      await axios.delete(`${API_URL}/api/chat/conversations/${id}`);
+      setConversations(prev => prev.filter(c => c.id !== id));
+      if (activeConversation?.id === id) {
+        setActiveConversation(null);
+      }
+      toast.success('Conversa excluída');
+    } catch (error) {
+      toast.error('Erro ao excluir conversa');
+      console.error('Failed to delete conversation', error);
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await axios.delete(`${API_URL}/api/chat/messages/${messageId}`);
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      fetchConversations();
+      toast.success('Mensagem excluída');
+    } catch (error) {
+      toast.error('Erro ao excluir mensagem');
+      console.error('Failed to delete message', error);
     }
   };
 
@@ -131,36 +179,39 @@ export function useChat() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'messages',
         },
         (payload) => {
-          const newMessage = payload.new;
+          if (payload.eventType === 'INSERT') {
+            const newMessage = payload.new;
 
-          // If message belongs to active conversation, add it
-          if (activeConversation && newMessage.conversation_id === activeConversation.id) {
-            setMessages(prev => {
-              if (prev.find(m => m.id === newMessage.id)) return prev;
-              return [...prev, newMessage];
-            });
-            offsetRef.current += 1;
+            // If message belongs to active conversation, add it
+            if (activeConversation && newMessage.conversation_id === activeConversation.id) {
+              setMessages(prev => {
+                if (prev.find(m => m.id === newMessage.id)) return prev;
+                return [...prev, newMessage];
+              });
+              offsetRef.current += 1;
 
-            // Mark as read if we are looking at it
-            if (newMessage.sender_id !== user.userId) {
-              // Instead of full fetch, we could have a dedicated "mark-as-read" endpoint
-              // but for now we keep it simple or just rely on the next fetch.
-              // To avoid inefficient GET, we can do a PATCH if we had it.
-              // For now, let's just update the unread count locally if possible.
+              // Mark as read if we are looking at it
+              if (newMessage.sender_id !== user.userId) {
+                fetchUnreadCount();
+              }
+            } else {
+              fetchConversations();
               fetchUnreadCount();
+
+              if (newMessage.sender_id !== user.userId) {
+                  toast.info('Nova mensagem recebida');
+              }
             }
-          } else {
+          } else if (payload.eventType === 'DELETE') {
+            const deletedMessageId = payload.old.id;
+            setMessages(prev => prev.filter(m => m.id !== deletedMessageId));
             fetchConversations();
             fetchUnreadCount();
-
-            if (newMessage.sender_id !== user.userId) {
-                toast.info('Nova mensagem recebida');
-            }
           }
         }
       )
@@ -184,6 +235,9 @@ export function useChat() {
     loadMoreMessages,
     sendMessage,
     startConversation,
+    renameConversation,
+    deleteConversation,
+    deleteMessage,
     unreadTotal,
     refreshConversations: fetchConversations,
   };

@@ -27,6 +27,7 @@ router.get('/conversations', (async (req: Request, res: Response) => {
     }
 
     const isUserAdmin = authReq.userPayload!.roles.includes('admin');
+    const { filter } = req.query;
 
     let query = `
       SELECT c.*,
@@ -36,13 +37,22 @@ router.get('/conversations', (async (req: Request, res: Response) => {
              (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND is_read = FALSE AND sender_id != $1) as unread_count
       FROM conversations c
       JOIN users u ON c.user_id = u.id
+      WHERE 1=1
     `;
 
     const params: any[] = [userId];
 
     if (!isUserAdmin) {
-      query += ` WHERE c.user_id = $2`;
+      query += ` AND c.user_id = $2`;
       params.push(userId);
+    } else if (filter === 'unread') {
+      query += ` AND (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND is_read = FALSE AND sender_id != $1) > 0`;
+    } else if (filter === 'unanswered') {
+      query += ` AND (
+        SELECT sender_id FROM messages
+        WHERE conversation_id = c.id
+        ORDER BY created_at DESC LIMIT 1
+      ) NOT IN (SELECT id FROM users WHERE 'admin' = ANY(roles))`;
     }
 
     query += ` ORDER BY last_message_at DESC NULLS LAST, c.updated_at DESC`;
@@ -59,19 +69,23 @@ router.post('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.userPayload?.userId;
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
 
     if (!userId) {
       console.error('[Chat] userId missing in request during POST /conversations');
       return res.status(401).json({ error: 'Unauthorized: User identity lost' });
     }
 
-    const { title = 'Nova Conversa' } = req.body || {};
+    const { title = 'Nova Conversa', target_user_id } = req.body || {};
 
-    console.log(`[Chat] Creating new conversation for user ${userId} with title: ${title}`);
+    // If admin and target_user_id is provided, create conversation for that user
+    const ownerId = (isUserAdmin && target_user_id) ? target_user_id : userId;
+
+    console.log(`[Chat] Creating new conversation for user ${ownerId} with title: ${title}`);
 
     const { rows } = await db.query(
       'INSERT INTO conversations (user_id, title, updated_at) VALUES ($1, $2, NOW()) RETURNING *',
-      [userId, title]
+      [ownerId, title]
     );
     res.status(201).json(rows[0]);
   } catch (error: any) {
@@ -158,6 +172,86 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
     res.status(201).json(rows[0]);
   } catch (error: any) {
     handleDbError(res, error, 'sending message');
+  }
+}) as any);
+
+// Rename a conversation
+router.put('/conversations/:id', (async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const { id } = req.params;
+    const { title } = req.body;
+    const userId = authReq.userPayload?.userId;
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!title) return res.status(400).json({ error: 'Title is required' });
+
+    // Verify access
+    const conv = await db.query('SELECT * FROM conversations WHERE id = $1', [id]);
+    if (conv.rows.length === 0) return res.status(404).json({ error: 'Conversation not found' });
+    if (!isUserAdmin && conv.rows[0].user_id !== userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const { rows } = await db.query(
+      'UPDATE conversations SET title = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [title, id]
+    );
+    res.json(rows[0]);
+  } catch (error: any) {
+    handleDbError(res, error, 'renaming conversation');
+  }
+}) as any);
+
+// Delete a conversation (Reset)
+router.delete('/conversations/:id', (async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const { id } = req.params;
+    const userId = authReq.userPayload?.userId;
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Verify access
+    const conv = await db.query('SELECT * FROM conversations WHERE id = $1', [id]);
+    if (conv.rows.length === 0) return res.status(404).json({ error: 'Conversation not found' });
+    if (!isUserAdmin && conv.rows[0].user_id !== userId) return res.status(403).json({ error: 'Forbidden' });
+
+    await db.query('DELETE FROM conversations WHERE id = $1', [id]);
+    res.status(204).end();
+  } catch (error: any) {
+    handleDbError(res, error, 'deleting conversation');
+  }
+}) as any);
+
+// Delete an unread message
+router.delete('/messages/:id', (async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const { id } = req.params;
+    const userId = authReq.userPayload?.userId;
+    const isUserAdmin = authReq.userPayload!.roles.includes('admin');
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Verify ownership and read status
+    const msg = await db.query('SELECT * FROM messages WHERE id = $1', [id]);
+    if (msg.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+
+    // Only allow deletion of own unread messages, or admin deletion (maybe admin should only delete their own too or any unread?)
+    // Request says "excluir mensagem ainda não lida" - usually means the one you sent.
+    if (msg.rows[0].sender_id !== userId && !isUserAdmin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (msg.rows[0].is_read && !isUserAdmin) {
+      return res.status(400).json({ error: 'Cannot delete read message' });
+    }
+
+    await db.query('DELETE FROM messages WHERE id = $1', [id]);
+    res.status(204).end();
+  } catch (error: any) {
+    handleDbError(res, error, 'deleting message');
   }
 }) as any);
 

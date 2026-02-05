@@ -11,9 +11,12 @@ interface ChatContextType {
   hasMore: boolean;
   loadMoreMessages: () => void;
   sendMessage: (content: string) => Promise<void>;
-  startConversation: (title?: string) => Promise<any>;
+  startConversation: (title?: string, targetUserId?: string) => Promise<any>;
+  renameConversation: (id: string, title: string) => Promise<void>;
+  deleteConversation: (id: string) => Promise<void>;
+  deleteMessage: (messageId: string) => Promise<void>;
   unreadTotal: number;
-  refreshConversations: () => Promise<void>;
+  refreshConversations: (filter?: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);

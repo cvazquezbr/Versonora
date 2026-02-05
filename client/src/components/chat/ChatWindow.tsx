@@ -1,8 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, ArrowLeft, Loader2 } from "lucide-react";
+import { Send, ArrowLeft, Loader2, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ChatBubble from "./ChatBubble";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useChatContext } from "@/contexts/ChatContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface Message {
   id: string;
@@ -36,9 +51,16 @@ export default function ChatWindow({
   onLoadMore,
 }: ChatWindowProps) {
   const [newMessage, setNewMessage] = useState("");
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState(title);
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevScrollHeightRef = useRef<number>(0);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const { renameConversation, deleteConversation, deleteMessage } = useChatContext();
+
+  useEffect(() => {
+    setNewTitle(title);
+  }, [title]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -85,16 +107,50 @@ export default function ChatWindow({
     }
   };
 
+  const handleRename = async () => {
+    if (newTitle.trim() && newTitle !== title) {
+      await renameConversation(conversationId, newTitle.trim());
+    }
+    setIsRenameDialogOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Tem certeza que deseja excluir esta conversa? Todas as mensagens serão perdidas.")) {
+      await deleteConversation(conversationId);
+      if (onBack) onBack();
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-white">
+    <div className="flex-1 flex flex-col h-full bg-white relative">
       {/* Sticky Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center gap-4 bg-white sticky top-0 z-10">
-        {onBack && (
-          <Button variant="ghost" size="icon" onClick={onBack} className="md:hidden">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        )}
-        <h3 className="font-bold text-slate-900">{title}</h3>
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="flex items-center gap-4 overflow-hidden">
+          {onBack && (
+            <Button variant="ghost" size="icon" onClick={onBack} className="md:hidden">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+          <h3 className="font-bold text-slate-900 truncate">{title}</h3>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setIsRenameDialogOpen(true)}>
+              <Edit2 className="w-4 h-4 mr-2" />
+              Renomear
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir Conversa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Messages Area */}
@@ -119,6 +175,7 @@ export default function ChatWindow({
                 key={msg.id}
                 message={msg}
                 isOwn={msg.sender_id === currentUserId}
+                onDelete={deleteMessage}
               />
             ))
           )}
@@ -146,6 +203,29 @@ export default function ChatWindow({
           </Button>
         </form>
       </div>
+
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Conversa</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Novo título da conversa"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsRenameDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRename} className="bg-purple-600 hover:bg-purple-700">
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
