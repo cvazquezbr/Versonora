@@ -11,7 +11,9 @@ router.use(protect as RequestHandler);
 router.get('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
-    const userId = authReq.user!.userId;
+    const userId = authReq.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
     const isUserAdmin = authReq.user!.roles.includes('admin');
 
     let query = `
@@ -36,6 +38,7 @@ router.get('/conversations', (async (req: Request, res: Response) => {
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (error: any) {
+    console.error('Error fetching conversations:', error);
     res.status(500).json({ error: error.message });
   }
 }) as any);
@@ -44,20 +47,24 @@ router.get('/conversations', (async (req: Request, res: Response) => {
 router.post('/conversations', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
-    const userId = authReq.user!.userId;
-    const { title = 'Nova Conversa' } = req.body;
+    const userId = authReq.user?.userId;
 
-    // We now allow multiple conversations, but if a title is provided we just create it.
-    // If we wanted to keep only one, we'd check here.
-    // Given the requirement of "topics", multiple seems better.
+    if (!userId) {
+      return res.status(401).json({ error: 'User ID missing from request' });
+    }
+
+    const { title = 'Nova Conversa' } = req.body || {};
+
+    console.log(`Creating new conversation for user ${userId} with title: ${title}`);
 
     const { rows } = await db.query(
-      'INSERT INTO conversations (user_id, title) VALUES ($1, $2) RETURNING *',
+      'INSERT INTO conversations (user_id, title, updated_at) VALUES ($1, $2, NOW()) RETURNING *',
       [userId, title]
     );
     res.status(201).json(rows[0]);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('Error creating conversation:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }) as any);
 
@@ -66,7 +73,9 @@ router.get('/conversations/:id/messages', (async (req: Request, res: Response) =
   try {
     const authReq = req as AuthRequest;
     const { id } = req.params;
-    const userId = authReq.user!.userId;
+    const userId = authReq.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
     const isUserAdmin = authReq.user!.roles.includes('admin');
 
     // Verify access
@@ -95,6 +104,7 @@ router.get('/conversations/:id/messages', (async (req: Request, res: Response) =
 
     res.json(rows.reverse());
   } catch (error: any) {
+    console.error('Error fetching messages:', error);
     res.status(500).json({ error: error.message });
   }
 }) as any);
@@ -105,7 +115,9 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
     const authReq = req as AuthRequest;
     const { id } = req.params;
     const { content } = req.body;
-    const userId = authReq.user!.userId;
+    const userId = authReq.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
     const isUserAdmin = authReq.user!.roles.includes('admin');
 
     // Verify access
@@ -127,6 +139,7 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
 
     res.status(201).json(rows[0]);
   } catch (error: any) {
+    console.error('Error sending message:', error);
     res.status(500).json({ error: error.message });
   }
 }) as any);
@@ -135,7 +148,9 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
 router.get('/unread-count', (async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
-    const userId = authReq.user!.userId;
+    const userId = authReq.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
     const isUserAdmin = authReq.user!.roles.includes('admin');
 
     let query = '';
@@ -150,6 +165,7 @@ router.get('/unread-count', (async (req: Request, res: Response) => {
     const { rows } = await db.query(query, isUserAdmin ? [] : params);
     res.json({ count: parseInt(rows[0].count) });
   } catch (error: any) {
+    console.error('Error getting unread count:', error);
     res.status(500).json({ error: error.message });
   }
 }) as any);
