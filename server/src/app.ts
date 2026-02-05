@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { initSchema } from './lib/schema.js';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
@@ -11,6 +12,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Initialize database schema
+initSchema().catch(err => {
+  console.error('Failed to initialize database schema:', err);
+});
 
 app.use(cors());
 app.use(express.json());

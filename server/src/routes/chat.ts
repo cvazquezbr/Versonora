@@ -6,6 +6,15 @@ const router = Router();
 
 router.use(protect as RequestHandler);
 
+// Handle database errors specifically for missing tables
+const handleDbError = (res: Response, error: any, context: string) => {
+  console.error(`Error ${context}:`, error);
+  if (error.code === '42P01') {
+    return res.status(500).json({ error: 'Database schema not fully initialized. Please try again in a few seconds.' });
+  }
+  res.status(500).json({ error: error.message || 'Internal Server Error' });
+};
+
 // Get conversations for the current user
 // If admin, get all conversations
 router.get('/conversations', (async (req: Request, res: Response) => {
@@ -38,8 +47,7 @@ router.get('/conversations', (async (req: Request, res: Response) => {
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (error: any) {
-    console.error('Error fetching conversations:', error);
-    res.status(500).json({ error: error.message });
+    handleDbError(res, error, 'fetching conversations');
   }
 }) as any);
 
@@ -63,8 +71,7 @@ router.post('/conversations', (async (req: Request, res: Response) => {
     );
     res.status(201).json(rows[0]);
   } catch (error: any) {
-    console.error('Error creating conversation:', error);
-    res.status(500).json({ error: error.message || 'Internal Server Error' });
+    handleDbError(res, error, 'creating conversation');
   }
 }) as any);
 
@@ -104,8 +111,7 @@ router.get('/conversations/:id/messages', (async (req: Request, res: Response) =
 
     res.json(rows.reverse());
   } catch (error: any) {
-    console.error('Error fetching messages:', error);
-    res.status(500).json({ error: error.message });
+    handleDbError(res, error, 'fetching messages');
   }
 }) as any);
 
@@ -139,8 +145,7 @@ router.post('/conversations/:id/messages', (async (req: Request, res: Response) 
 
     res.status(201).json(rows[0]);
   } catch (error: any) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ error: error.message });
+    handleDbError(res, error, 'sending message');
   }
 }) as any);
 
@@ -165,8 +170,7 @@ router.get('/unread-count', (async (req: Request, res: Response) => {
     const { rows } = await db.query(query, isUserAdmin ? [] : params);
     res.json({ count: parseInt(rows[0].count) });
   } catch (error: any) {
-    console.error('Error getting unread count:', error);
-    res.status(500).json({ error: error.message });
+    handleDbError(res, error, 'getting unread count');
   }
 }) as any);
 
