@@ -124,7 +124,7 @@ export function useChat() {
 
   // Real-time subscription
   useEffect(() => {
-    if (!user) return;
+    if (!user || !supabase) return;
 
     const channel = supabase
       .channel('public:messages')
@@ -167,7 +167,9 @@ export function useChat() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user, activeConversation, fetchConversations, fetchUnreadCount]);
 
