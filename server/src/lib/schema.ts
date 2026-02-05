@@ -61,10 +61,16 @@ export const initSchema = async () => {
   `;
 
   try {
+    // Split schema into individual statements to execute them one by one
+    // This can help identify which part fails, although simple splitting by ;
+    // might be tricky with DO blocks. For now, let's just add better logging.
     await db.query(schema);
-    console.log('Chat schema initialized successfully');
-  } catch (error) {
-    console.error('Error initializing chat schema:', error);
-    throw error;
+    console.log('Database schema initialized successfully');
+  } catch (error: any) {
+    console.error('Error initializing database schema:', error.message);
+    if (error.detail) console.error('Error detail:', error.detail);
+    if (error.hint) console.error('Error hint:', error.hint);
+    // Don't throw to allow app to start even if schema fails (e.g. read-only DB)
+    // throw error;
   }
 };

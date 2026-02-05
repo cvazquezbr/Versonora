@@ -10,10 +10,17 @@ import path from 'path';
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+
+const ensureUploadsDir = () => {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    console.log(`[ProductionCases] Creating uploads directory at: ${UPLOADS_DIR}`);
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+};
+
+// Ensure directory exists at startup
+ensureUploadsDir();
 
 // Get all production cases (Publicly accessible)
 router.get('/', (async (req: Request, res: Response) => {
@@ -73,10 +80,11 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
         }
       } else {
         // Fallback to local storage
+        ensureUploadsDir();
         const filePath = path.join(UPLOADS_DIR, fileName);
         fs.writeFileSync(filePath, file.buffer);
         cover_url = `/uploads/${fileName}`;
-        console.log(`[ProductionCases] File saved locally: ${cover_url}`);
+        console.log(`[ProductionCases] File saved locally: ${cover_url} at ${filePath}`);
       }
     }
 
@@ -118,10 +126,11 @@ router.put('/:id', protect as any, isAdmin as any, upload.single('cover'), (asyn
         cover_url = publicUrl;
       } else {
         // Fallback to local storage
+        ensureUploadsDir();
         const filePath = path.join(UPLOADS_DIR, fileName);
         fs.writeFileSync(filePath, file.buffer);
         cover_url = `/uploads/${fileName}`;
-        console.log(`[ProductionCases] File updated locally: ${cover_url}`);
+        console.log(`[ProductionCases] File updated locally: ${cover_url} at ${filePath}`);
       }
     }
 

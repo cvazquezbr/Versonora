@@ -88,26 +88,30 @@ const AdminProductionCases = () => {
     }
 
     try {
+      console.log('Submitting case:', editingCase.id ? 'UPDATE' : 'CREATE', editingCase);
       if (editingCase.id) {
-        await axios.put(`${API_URL}/api/production-cases/${editingCase.id}`, formData, {
+        const response = await axios.put(`${API_URL}/api/production-cases/${editingCase.id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
           }
         });
+        console.log('Update response:', response.data);
         toast.success('Caso atualizado com sucesso');
       } else {
-        await axios.post(`${API_URL}/api/production-cases`, formData, {
+        const response = await axios.post(`${API_URL}/api/production-cases`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
           }
         });
+        console.log('Create response:', response.data);
         toast.success('Caso criado com sucesso');
       }
       setIsModalOpen(false);
       fetchCases();
     } catch (error) {
+      console.error('Submit error:', error);
       toast.error(getErrorMessage(error, 'Falha ao salvar caso'));
     }
   };
