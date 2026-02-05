@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import db from '../lib/db.js';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is not set');
@@ -13,32 +12,39 @@ interface UserPayload {
 }
 
 export interface AuthRequest extends Request {
-  user?: UserPayload;
+  userPayload?: UserPayload;
 }
 
 export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
 
   if (!token) {
-    console.warn('Authentication failed: No token provided');
-    return res.status(401).json({ error: 'Unauthorized' });
+    console.warn(`[Auth] Missing token for ${req.method} ${req.path}. Header present: ${!!authHeader}`);
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as UserPayload;
-    req.user = decoded;
+    console.log(`[Auth] Token verified for user ${decoded.userId} on ${req.method} ${req.path}`);
+    req.userPayload = decoded;
     next();
-  } catch (error) {
-    console.error('Authentication failed: Invalid token', error);
-    return res.status(401).json({ error: 'Unauthorized' });
+  } catch (error: any) {
+    console.error(`[Auth] Token verification failed for ${req.method} ${req.path}:`, error.message);
+    return res.status(401).json({ error: `Unauthorized: Invalid token (${error.message})` });
   }
 };
 
 export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const user = req.user;
+  const user = req.userPayload;
   if (user && user.roles.includes('admin')) {
     next();
   } else {
-    res.status(403).json({ error: 'Forbidden' });
+    console.warn(`[Auth] Admin access denied for user ${user?.userId}`);
+    res.status(403).json({ error: 'Forbidden: Admin access required' });
   }
 };
