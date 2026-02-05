@@ -22,6 +22,16 @@ export const initSchema = async () => {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS production_cases (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name TEXT NOT NULL,
+      description TEXT,
+      cover_url TEXT,
+      youtube_url TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+
     CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
 

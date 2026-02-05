@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { useAuth } from '../contexts/AuthContext';
 import { getErrorMessage } from '../lib/utils';
 import { API_URL } from '../lib/api-config';
+import { Link } from 'wouter';
 
 const Admin = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -89,7 +90,14 @@ const Admin = () => {
     <div className="min-h-screen bg-white">
       <Header showNav={false} />
       <div className="container pt-24 p-4 mx-auto">
-        <h2 className="mb-4 text-2xl font-bold text-slate-900">User Management</h2>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold text-slate-900">User Management</h2>
+          <Link href="/admin/production-cases">
+            <button className="px-4 py-2 text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors">
+              Gerenciar Casos de Produção
+            </button>
+          </Link>
+        </div>
       <div className="flex justify-end mb-4">
         <button
           onClick={() => setCreateModalOpen(true)}
