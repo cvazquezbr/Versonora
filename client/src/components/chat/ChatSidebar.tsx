@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Conversation {
   id: string;
@@ -16,6 +18,7 @@ interface ChatSidebarProps {
   activeConversationId?: string;
   onSelect: (conversation: Conversation) => void;
   isAdmin: boolean;
+  onFilterChange?: (filter: string) => void;
 }
 
 export default function ChatSidebar({
@@ -23,11 +26,28 @@ export default function ChatSidebar({
   activeConversationId,
   onSelect,
   isAdmin,
+  onFilterChange,
 }: ChatSidebarProps) {
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    onFilterChange?.(filter);
+  };
+
   return (
     <div className="w-full md:w-80 border-r border-slate-100 h-full flex flex-col bg-white">
       <div className="p-4 border-b border-slate-100">
-        <h2 className="text-lg font-bold text-slate-900">Conversas</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-2">Conversas</h2>
+        {isAdmin && (
+          <Tabs defaultValue="all" value={activeFilter} onValueChange={handleFilterChange} className="w-full">
+            <TabsList className="grid grid-cols-3 w-full h-8 p-1">
+              <TabsTrigger value="all" className="text-[10px] py-1">Todas</TabsTrigger>
+              <TabsTrigger value="unread" className="text-[10px] py-1">Não lidas</TabsTrigger>
+              <TabsTrigger value="unanswered" className="text-[10px] py-1">Pendente</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 ? (
