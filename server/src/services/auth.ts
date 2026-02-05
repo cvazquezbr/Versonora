@@ -37,7 +37,7 @@ export const comparePassword = (password: string, hash: string) => {
 };
 
 export const generateToken = (userId: string, roles: string[]) => {
-  return jwt.sign({ userId, roles }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId, roles }, JWT_SECRET, { expiresIn: '7d' });
 };
 
 export const generatePasswordResetToken = async (email: string) => {

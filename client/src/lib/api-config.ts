@@ -8,6 +8,7 @@ axios.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // console.log(`[Axios] Added token to ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
   },
