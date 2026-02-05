@@ -20,6 +20,7 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
+    console.warn('Authentication failed: No token provided');
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -28,6 +29,7 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Authentication failed: Invalid token', error);
     return res.status(401).json({ error: 'Unauthorized' });
   }
 };
