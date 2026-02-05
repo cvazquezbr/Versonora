@@ -11,7 +11,7 @@ interface ChatContextType {
   hasMore: boolean;
   loadMoreMessages: () => void;
   sendMessage: (content: string) => Promise<void>;
-  startConversation: () => Promise<any>;
+  startConversation: (title?: string) => Promise<any>;
   unreadTotal: number;
   refreshConversations: () => Promise<void>;
 }

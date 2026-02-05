@@ -29,7 +29,8 @@ export default function ChatPage() {
   };
 
   const handleNewChat = async () => {
-    const conv = await startConversation();
+    const title = `Conversa #${conversations.length + 1}`;
+    const conv = await startConversation(title);
     if (conv) {
       handleSelectConversation(conv);
     }
@@ -41,14 +42,14 @@ export default function ChatPage() {
       <div className="flex-1 pt-16 flex overflow-hidden">
         <div className={`${isMobileListVisible ? 'flex' : 'hidden'} md:flex w-full md:w-auto h-full`}>
           <div className="flex flex-col w-full">
-            {!isAdmin() && conversations.length === 0 && (
+            {!isAdmin() && (
                 <div className="p-4 border-b border-slate-100">
                     <Button
                         onClick={handleNewChat}
                         className="w-full bg-purple-600 hover:bg-purple-700 text-white flex gap-2"
                     >
                         <MessageSquarePlus className="w-4 h-4" />
-                        Iniciar Novo Chat
+                        Nova Conversa
                     </Button>
                 </div>
             )}
@@ -65,7 +66,7 @@ export default function ChatPage() {
           {activeConversation ? (
             <ChatWindow
               conversationId={activeConversation.id}
-              title={isAdmin() ? activeConversation.user_email : "Suporte Versonora"}
+              title={isAdmin() ? activeConversation.user_email : activeConversation.title}
               messages={messages}
               onSendMessage={sendMessage}
               currentUserId={user?.userId || ''}
@@ -78,12 +79,12 @@ export default function ChatPage() {
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50">
               <MessageSquarePlus className="w-12 h-12 mb-4 opacity-20" />
               <p>Selecione uma conversa para começar</p>
-              {!isAdmin() && conversations.length === 0 && (
+              {!isAdmin() && (
                   <Button
                     onClick={handleNewChat}
                     className="mt-4 bg-purple-600 hover:bg-purple-700"
                   >
-                      Começar agora
+                      Nova Conversa
                   </Button>
               )}
             </div>
