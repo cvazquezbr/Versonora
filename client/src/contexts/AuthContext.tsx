@@ -39,10 +39,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (token) {
       try {
         const decodedUser = jwtDecode<User>(token);
+        console.log('Token decoded successfully:', decodedUser);
         setUser(decodedUser);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       } catch (error) {
-        console.error('Invalid token');
+        console.error('Invalid token:', error);
         // Don't redirect here, just clear the token
         localStorage.removeItem('token');
         setToken(null);
@@ -54,15 +55,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = (newToken: string) => {
     localStorage.setItem('token', newToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     setToken(newToken);
     setLocation('/');
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
     setLocation('/login');
   };
 
