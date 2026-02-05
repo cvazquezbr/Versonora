@@ -1,12 +1,10 @@
-import { createServer } from 'http';
 import dotenv from 'dotenv';
-import app from './app.js';
-import { initSchema } from './lib/schema.js';
-
 dotenv.config();
 
+import { createServer } from 'http';
+import app from './app.js';
+
 async function startServer() {
-  await initSchema();
   const server = createServer(app);
   const port = process.env.PORT || 3001;
 

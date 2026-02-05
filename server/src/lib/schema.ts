@@ -1,6 +1,7 @@
 import db from './db.js';
 
 export const initSchema = async () => {
+  console.log('Initializing database schema...');
   const schema = `
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
