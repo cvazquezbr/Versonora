@@ -25,8 +25,12 @@ app.use(passport.initialize());
 
 // Serve local uploads
 const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch (error) {
+  console.warn('[App] Could not create local uploads directory (this is expected on Vercel)');
 }
 app.use('/uploads', express.static(UPLOADS_DIR));
 

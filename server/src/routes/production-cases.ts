@@ -11,11 +11,23 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+let isLocalStorageAvailable = false;
 
 const ensureUploadsDir = () => {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    console.log(`[ProductionCases] Creating uploads directory at: ${UPLOADS_DIR}`);
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(UPLOADS_DIR)) {
+      console.log(`[ProductionCases] Attempting to create uploads directory at: ${UPLOADS_DIR}`);
+      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+    // Test if writable
+    const testFile = path.join(UPLOADS_DIR, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    isLocalStorageAvailable = true;
+    console.log(`[ProductionCases] Local storage is available at: ${UPLOADS_DIR}`);
+  } catch (error: any) {
+    console.warn(`[ProductionCases] Local storage is NOT available (this is expected on Vercel): ${error.message}`);
+    isLocalStorageAvailable = false;
   }
 };
 
@@ -78,13 +90,14 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
           const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
           cover_url = publicUrl;
         }
-      } else {
+      } else if (isLocalStorageAvailable) {
         // Fallback to local storage
-        ensureUploadsDir();
         const filePath = path.join(UPLOADS_DIR, fileName);
         fs.writeFileSync(filePath, file.buffer);
         cover_url = `/uploads/${fileName}`;
-        console.log(`[ProductionCases] File saved locally: ${cover_url} at ${filePath}`);
+        console.log(`[ProductionCases] File saved locally: ${cover_url}`);
+      } else {
+        throw new Error('Armazenamento não configurado. Por favor, configure as variáveis SUPABASE_URL e SUPABASE_SERVICE_KEY no Vercel para permitir o upload de imagens.');
       }
     }
 
@@ -124,13 +137,14 @@ router.put('/:id', protect as any, isAdmin as any, upload.single('cover'), (asyn
 
         const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
         cover_url = publicUrl;
-      } else {
+      } else if (isLocalStorageAvailable) {
         // Fallback to local storage
-        ensureUploadsDir();
         const filePath = path.join(UPLOADS_DIR, fileName);
         fs.writeFileSync(filePath, file.buffer);
         cover_url = `/uploads/${fileName}`;
-        console.log(`[ProductionCases] File updated locally: ${cover_url} at ${filePath}`);
+        console.log(`[ProductionCases] File updated locally: ${cover_url}`);
+      } else {
+        throw new Error('Armazenamento não configurado. Por favor, configure as variáveis SUPABASE_URL e SUPABASE_SERVICE_KEY no Vercel para permitir o upload de imagens.');
       }
     }
 
