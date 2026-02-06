@@ -46,17 +46,24 @@ export const initSchema = async () => {
     -- Enable Realtime for messages
     DO $$
     BEGIN
+      -- Create publication if it doesn't exist
+      IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        CREATE PUBLICATION supabase_realtime;
+      END IF;
+
+      -- Add table to publication if not already added
       IF NOT EXISTS (
         SELECT 1 FROM pg_publication_tables
         WHERE pubname = 'supabase_realtime' AND tablename = 'messages'
       ) THEN
-        BEGIN
-          ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-        EXCEPTION WHEN OTHERS THEN
-          -- Publication might not exist or other error
-          NULL;
-        END;
+        ALTER PUBLICATION supabase_realtime ADD TABLE messages;
       END IF;
+
+      -- Ensure replica identity is set for DELETE events
+      ALTER TABLE messages REPLICA IDENTITY FULL;
+    EXCEPTION WHEN OTHERS THEN
+      -- Log error but don't fail schema initialization
+      RAISE NOTICE 'Could not enable Supabase Realtime via SQL: %', SQLERRM;
     END $$;
   `;
 

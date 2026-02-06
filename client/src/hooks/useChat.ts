@@ -174,8 +174,10 @@ export function useChat() {
   useEffect(() => {
     if (!user || !supabase) return;
 
+    console.log('[Chat] Subscribing to messages realtime...');
+
     const channel = supabase
-      .channel('public:messages')
+      .channel('messages-changes')
       .on(
         'postgres_changes',
         {
@@ -184,10 +186,17 @@ export function useChat() {
           table: 'messages',
         },
         (payload) => {
+          console.log('[Chat] Realtime event received:', payload.eventType, payload);
+
           if (payload.eventType === 'INSERT') {
             const newMessage = payload.new;
 
-            // If message belongs to active conversation, add it
+            // Use functional state update to always have the latest activeConversation state
+            // and avoid frequent re-subscriptions if we were using it in the dependency array
+            // BUT wait, we need to know WHICH conversation is active.
+
+            // We'll keep using the activeConversation from the closure,
+            // but ensure we update messages correctly.
             if (activeConversation && newMessage.conversation_id === activeConversation.id) {
               setMessages(prev => {
                 if (prev.find(m => m.id === newMessage.id)) return prev;
@@ -195,9 +204,10 @@ export function useChat() {
               });
               offsetRef.current += 1;
 
-              // Mark as read if we are looking at it
               if (newMessage.sender_id !== user.userId) {
                 fetchUnreadCount();
+                // Also refresh conversations to update last message in sidebar
+                fetchConversations();
               }
             } else {
               fetchConversations();
@@ -215,14 +225,17 @@ export function useChat() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[Chat] Realtime subscription status:', status);
+      });
 
     return () => {
+      console.log('[Chat] Unsubscribing from messages realtime');
       if (supabase) {
         supabase.removeChannel(channel);
       }
     };
-  }, [user, activeConversation, fetchConversations, fetchUnreadCount]);
+  }, [user, activeConversation?.id, fetchConversations, fetchUnreadCount]);
 
   return {
     conversations,
