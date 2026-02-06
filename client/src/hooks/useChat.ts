@@ -8,8 +8,14 @@ import { toast } from 'sonner';
 export function useChat() {
   const [conversations, setConversations] = useState<any[]>([]);
   const [activeConversation, setActiveConversation] = useState<any>(null);
+  const activeConversationRef = useRef<any>(null);
   const [currentFilter, setCurrentFilter] = useState<string | undefined>(undefined);
   const [messages, setMessages] = useState<any[]>([]);
+
+  // Keep ref in sync
+  useEffect(() => {
+    activeConversationRef.current = activeConversation;
+  }, [activeConversation]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -188,16 +194,12 @@ export function useChat() {
         (payload) => {
           console.log('[Chat] Realtime event received:', payload.eventType, payload);
 
+          const currentActiveConv = activeConversationRef.current;
+
           if (payload.eventType === 'INSERT') {
             const newMessage = payload.new;
 
-            // Use functional state update to always have the latest activeConversation state
-            // and avoid frequent re-subscriptions if we were using it in the dependency array
-            // BUT wait, we need to know WHICH conversation is active.
-
-            // We'll keep using the activeConversation from the closure,
-            // but ensure we update messages correctly.
-            if (activeConversation && newMessage.conversation_id === activeConversation.id) {
+            if (currentActiveConv && newMessage.conversation_id === currentActiveConv.id) {
               setMessages(prev => {
                 if (prev.find(m => m.id === newMessage.id)) return prev;
                 return [...prev, newMessage];
@@ -206,7 +208,6 @@ export function useChat() {
 
               if (newMessage.sender_id !== user.userId) {
                 fetchUnreadCount();
-                // Also refresh conversations to update last message in sidebar
                 fetchConversations();
               }
             } else {
@@ -225,8 +226,9 @@ export function useChat() {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status, err) => {
         console.log('[Chat] Realtime subscription status:', status);
+        if (err) console.error('[Chat] Realtime subscription error:', err);
       });
 
     return () => {
@@ -235,7 +237,7 @@ export function useChat() {
         supabase.removeChannel(channel);
       }
     };
-  }, [user, activeConversation?.id, fetchConversations, fetchUnreadCount]);
+  }, [user, fetchConversations, fetchUnreadCount]);
 
   return {
     conversations,
