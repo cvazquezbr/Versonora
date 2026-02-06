@@ -57,9 +57,10 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
       const fileName = `${nanoid()}.${fileExt}`;
 
       if (supabase) {
+        const bucketName = process.env.SUPABASE_BUCKET || 'CASE-IMAGES';
         const filePath = `covers/${fileName}`;
         const { data, error } = await supabase.storage
-          .from('production-cases')
+          .from(bucketName)
           .upload(filePath, file.buffer, {
             contentType: file.mimetype,
             upsert: true
@@ -69,15 +70,15 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
           // Try to create bucket if it doesn't exist
           if (error.message.includes('bucket not found') || error.message.includes('Bucket not found')) {
               try {
-                  await supabase.storage.createBucket('production-cases', { public: true });
+                  await supabase.storage.createBucket(bucketName, { public: true });
                   const { data: retryData, error: retryError } = await supabase.storage
-                      .from('production-cases')
+                      .from(bucketName)
                       .upload(filePath, file.buffer, {
                           contentType: file.mimetype,
                           upsert: true
                       });
                   if (retryError) throw retryError;
-                  const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
+                  const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filePath);
                   cover_url = publicUrl;
               } catch (bucketError) {
                   console.error('[ProductionCases] Error creating bucket or retrying upload:', bucketError);
@@ -87,7 +88,7 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
               throw error;
           }
         } else {
-          const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
+          const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filePath);
           cover_url = publicUrl;
         }
       } else if (isLocalStorageAvailable) {
@@ -125,9 +126,10 @@ router.put('/:id', protect as any, isAdmin as any, upload.single('cover'), (asyn
       const fileName = `${nanoid()}.${fileExt}`;
 
       if (supabase) {
+        const bucketName = process.env.SUPABASE_BUCKET || 'CASE-IMAGES';
         const filePath = `covers/${fileName}`;
         const { data, error } = await supabase.storage
-          .from('production-cases')
+          .from(bucketName)
           .upload(filePath, file.buffer, {
             contentType: file.mimetype,
             upsert: true
@@ -135,7 +137,7 @@ router.put('/:id', protect as any, isAdmin as any, upload.single('cover'), (asyn
 
         if (error) throw error;
 
-        const { data: { publicUrl } } = supabase.storage.from('production-cases').getPublicUrl(filePath);
+        const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(filePath);
         cover_url = publicUrl;
       } else if (isLocalStorageAvailable) {
         // Fallback to local storage
