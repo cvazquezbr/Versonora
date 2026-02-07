@@ -57,7 +57,7 @@ router.post('/', protect as any, isAdmin as any, upload.single('cover'), (async 
       const fileName = `${nanoid()}.${fileExt}`;
 
       if (supabase) {
-        const bucketName = process.env.SUPABASE_BUCKET || 'CASE-IMAGES';
+        const bucketName = process.env.SUPABASE_BUCKET || 'case-images';
         const filePath = `covers/${fileName}`;
         const { data, error } = await supabase.storage
           .from(bucketName)
@@ -126,7 +126,7 @@ router.put('/:id', protect as any, isAdmin as any, upload.single('cover'), (asyn
       const fileName = `${nanoid()}.${fileExt}`;
 
       if (supabase) {
-        const bucketName = process.env.SUPABASE_BUCKET || 'CASE-IMAGES';
+        const bucketName = process.env.SUPABASE_BUCKET || 'case-images';
         const filePath = `covers/${fileName}`;
         const { data, error } = await supabase.storage
           .from(bucketName)
